@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HippoShield Rouge</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; background:#1a0003; }
+
+body {
+background-color: #1a0003 !important;
+background: #1a0003 !important;
+color: #ffffff;
+font-family: ‘Barlow’, sans-serif;
+font-weight: 300;
+overflow-x: hidden;
+cursor: none;
+}
+
+/* RED gradient mesh - hardcoded, no variables */
+.bg-layer {
+position: fixed;
+inset: 0;
+background:
+radial-gradient(ellipse 70% 60% at 20% 20%, rgba(140,0,14,0.9) 0%, transparent 60%),
+radial-gradient(ellipse 55% 55% at 80% 80%, rgba(110,0,10,0.8) 0%, transparent 55%),
+radial-gradient(ellipse 90% 40% at 50% 0%, rgba(210,0,25,0.45) 0%, transparent 50%),
+linear-gradient(160deg, #1a0003 0%, #420009 35%, #280006 65%, #0d0002 100%);
+z-index: 0;
+pointer-events: none;
+}
+
+/* Gold grid */
+.grid-layer {
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(255,215,0,0.05) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,215,0,0.05) 1px, transparent 1px);
+background-size: 50px 50px;
+z-index: 1;
+pointer-events: none;
+}
+
+/* CURSOR */
+.cursor {
+position:fixed; width:10px; height:10px;
+background:#ffd700; border-radius:50%;
+pointer-events:none; z-index:9999;
+transform:translate(-50%,-50%);
+transition:transform 0.08s;
+mix-blend-mode:screen;
+box-shadow:0 0 12px #ffd700, 0 0 24px rgba(255,215,0,0.6);
+}
+.cursor-ring {
+position:fixed; width:38px; height:38px;
+border:1.5px solid #ffd700; border-radius:50%;
+pointer-events:none; z-index:9998;
+transform:translate(-50%,-50%);
+transition:transform 0.18s ease;
+opacity:0.65;
+box-shadow:0 0 14px rgba(255,215,0,0.4);
+}
+
+#particleCanvas { position:fixed; inset:0; z-index:2; pointer-events:none; }
+
+/* HERO */
+.hero {
+position:relative; z-index:3;
+min-height:100vh;
+display:flex; flex-direction:column;
+align-items:center; justify-content:center;
+text-align:center; overflow:hidden; padding:60px 20px;
+}
+.hero::before {
+content:’’; position:absolute; inset:0;
+background:
+radial-gradient(ellipse 55% 45% at 50% 55%, rgba(255,80,0,0.09) 0%, transparent 65%),
+radial-gradient(ellipse 35% 25% at 50% 50%, rgba(255,215,0,0.05) 0%, transparent 55%);
+pointer-events:none;
+}
+
+.hero-lines { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.hero-lines span {
+position:absolute; display:block; width:1px;
+background:linear-gradient(to bottom, transparent, rgba(255,215,0,0.22), transparent);
+animation:lineScan 9s linear infinite; opacity:0;
+}
+.hero-lines span:nth-child(1){left:12%;height:50%;animation-delay:0s}
+.hero-lines span:nth-child(2){left:28%;height:65%;animation-delay:2.5s}
+.hero-lines span:nth-child(3){left:50%;height:40%;animation-delay:5s}
+.hero-lines span:nth-child(4){left:72%;height:55%;animation-delay:1.2s}
+.hero-lines span:nth-child(5){left:88%;height:48%;animation-delay:3.7s}
+@keyframes lineScan {
+0%{top:-70%;opacity:0} 15%{opacity:1} 85%{opacity:1} 100%{top:130%;opacity:0}
+}
+
+.logo-lockup { position:relative; margin-bottom:44px; }
+.logo-pre {
+font-family:‘Barlow Condensed’,sans-serif;
+font-size:0.78rem; font-weight:700; letter-spacing:9px;
+color:#ffe766; text-transform:uppercase;
+opacity:0; animation:fadeUp 0.8s 0.3s ease forwards;
+text-shadow:0 0 22px rgba(255,215,0,0.6);
+}
+.logo-main {
+font-family:‘Bebas Neue’,sans-serif;
+font-size:clamp(5rem,15vw,11rem);
+line-height:0.9; letter-spacing:10px;
+background:linear-gradient(175deg, #ffffff 0%, #fff3b0 28%, #ffe766 50%, #ffd700 68%, #e6a000 85%, #c47a00 100%);
+-webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+filter: drop-shadow(0 0 50px rgba(255,215,0,0.65)) drop-shadow(0 0 100px rgba(255,160,0,0.35)) drop-shadow(0 6px 30px rgba(0,0,0,0.95));
+opacity:0; animation:heroReveal 1.3s 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+position:relative;
+}
+.logo-sub {
+font-family:‘Barlow Condensed’,sans-serif;
+font-size:clamp(0.85rem,2.2vw,1.2rem); font-weight:300;
+letter-spacing:13px; color:rgba(255,231,102,0.65);
+text-transform:uppercase;
+opacity:0; animation:fadeUp 0.8s 1s ease forwards; margin-top:8px;
+}
+
+.ornament { display:flex; align-items:center; gap:16px; opacity:0; animation:fadeUp 0.8s 1.2s ease forwards; margin:22px auto; width:fit-content; }
+.ornament-line { width:130px; height:1px; background:linear-gradient(90deg,transparent,#ffd700); }
+.ornament-line.r { background:linear-gradient(90deg,#ffd700,transparent); }
+.ornament-diamond {
+width:9px; height:9px; background:#ffd700; transform:rotate(45deg);
+box-shadow:0 0 16px #ffd700, 0 0 32px rgba(255,215,0,0.6);
+animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+0%,100%{box-shadow:0 0 14px #ffd700,0 0 28px rgba(255,215,0,0.4)}
+50%{box-shadow:0 0 30px #ffd700,0 0 65px rgba(255,200,0,0.75),0 0 95px rgba(255,150,0,0.3)}
+}
+
+.hero-desc {
+max-width:580px; font-size:1.06rem; line-height:1.85; color:rgba(255,255,255,0.88);
+opacity:0; animation:fadeUp 0.8s 1.4s ease forwards; margin-bottom:38px;
+text-shadow:0 1px 8px rgba(0,0,0,0.8);
+}
+.hero-desc em { color:#ffe766; font-style:normal; font-weight:500; }
+
+.hero-pills { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; opacity:0; animation:fadeUp 0.8s 1.6s ease forwards; margin-bottom:48px; }
+.pill {
+padding:8px 20px; border:1px solid rgba(255,215,0,0.35); border-radius:2px;
+font-family:‘Barlow Condensed’,sans-serif; font-size:0.8rem; font-weight:700; letter-spacing:3px;
+color:#ffe766; text-transform:uppercase;
+background:rgba(255,215,0,0.07); backdrop-filter:blur(6px);
+transition:all 0.3s ease; position:relative; overflow:hidden;
+}
+.pill::before { content:’’; position:absolute; inset:0; background:linear-gradient(135deg,transparent,rgba(255,215,0,0.18),transparent); transform:translateX(-100%); transition:transform 0.4s ease; }
+.pill:hover::before{transform:translateX(100%)}
+.pill:hover { background:rgba(255,215,0,0.17); color:#fff; box-shadow:0 0 24px rgba(255,215,0,0.32); transform:translateY(-2px); border-color:#ffd700; }
+
+.scroll-hint { opacity:0; animation:fadeUp 0.8s 2s ease forwards; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.scroll-hint span { font-family:‘Barlow Condensed’,sans-serif; font-size:0.68rem; letter-spacing:4px; color:rgba(255,215,0,0.45); text-transform:uppercase; }
+.scroll-arrow { width:22px; height:22px; border-right:1.5px solid #ffd700; border-bottom:1.5px solid #ffd700; transform:rotate(45deg); animation:bounce 1.6s ease-in-out infinite; opacity:0.65; }
+@keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(7px)}}
+
+/* SECTIONS */
+.section { position:relative; z-index:3; max-width:1100px; margin:0 auto; padding:80px 24px; }
+.section-label { font-family:‘Barlow Condensed’,sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:6px; color:#ffd700; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:12px; }
+.section-label::before{ content:’’; width:28px; height:1px; background:#ffd700; }
+.section-title {
+font-family:‘Bebas Neue’,sans-serif; font-size:clamp(2.4rem,6vw,4rem); letter-spacing:4px; line-height:1;
+background:linear-gradient(135deg,#ffffff,#ffe766,#ffd700);
+-webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+margin-bottom:10px; filter:drop-shadow(0 0 22px rgba(255,215,0,0.35));
+}
+.section-intro { font-size:1rem; line-height:1.8; color:rgba(255,255,255,0.55); max-width:500px; margin-bottom:44px; }
+
+/* MEDIA GRID */
+.media-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+.media-slot {
+position:relative; border-radius:4px; overflow:hidden;
+background:rgba(80,0,8,0.6); border:1px solid rgba(255,215,0,0.2);
+aspect-ratio:4/3; display:flex; align-items:center; justify-content:center;
+flex-direction:column; gap:10px; cursor:pointer;
+transition:all 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.media-slot:hover { border-color:#ffd700; transform:scale(1.02); box-shadow:0 0 40px rgba(255,215,0,0.25),inset 0 0 30px rgba(255,215,0,0.05); }
+.media-slot input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; z-index:3; }
+.media-slot img,.media-slot video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:2; }
+.media-slot.video-slot{ grid-column:1/-1; aspect-ratio:16/7; }
+.slot-icon{ font-size:2rem; opacity:0.35; z-index:1; transition:opacity 0.3s,transform 0.3s; }
+.media-slot:hover .slot-icon{ opacity:0.75; transform:scale(1.1); }
+.slot-label{ font-family:‘Barlow Condensed’,sans-serif; font-size:0.75rem; letter-spacing:3px; color:rgba(255,215,0,0.4); text-transform:uppercase; z-index:1; }
+.media-slot:hover .slot-label{ color:rgba(255,215,0,0.85); }
+.upload-badge{ position:absolute; top:12px; right:12px; background:#ffd700; color:#1a0003; font-family:‘Barlow Condensed’,sans-serif; font-size:0.6rem; font-weight:800; letter-spacing:2px; padding:3px 8px; border-radius:2px; text-transform:uppercase; z-index:4; opacity:0; transition:opacity 0.3s; }
+.media-slot:hover .upload-badge{ opacity:1; }
+.media-slot::before,.media-slot::after{ content:’’; position:absolute; width:16px; height:16px; border-color:#ffd700; border-style:solid; transition:all 0.3s ease; z-index:5; pointer-events:none; }
+.media-slot::before{top:8px;left:8px;border-width:1.5px 0 0 1.5px}
+.media-slot::after{bottom:8px;right:8px;border-width:0 1.5px 1.5px 0}
+.media-slot:hover::before,.media-slot:hover::after{width:26px;height:26px}
+
+/* LAYERS */
+.layers-section { position:relative; z-index:3; padding:80px 0; overflow:hidden; }
+.layers-section::before { content:’’; position:absolute; inset:0; background: radial-gradient(ellipse 80% 50% at 0% 50%, rgba(255,215,0,0.04) 0%, transparent 55%), radial-gradient(ellipse 60% 40% at 100% 50%, rgba(255,100,0,0.04) 0%, transparent 55%); pointer-events:none; }
+.layers-inner{ max-width:1100px; margin:0 auto; padding:0 24px; }
+.exploded{ position:relative; display:flex; flex-direction:column; gap:0; perspective:1400px; }
+
+.layer-card {
+position:relative; display:grid; grid-template-columns:80px 1fr auto;
+align-items:center; gap:28px; padding:26px 32px; margin:3px 0;
+background:linear-gradient(135deg, rgba(255,215,0,0.05) 0%, rgba(55,0,8,0.94) 100%);
+border-left:2.5px solid var(–lc, #ffd700);
+border-bottom:1px solid rgba(255,215,0,0.07);
+transition:all 0.45s cubic-bezier(0.16,1,0.3,1);
+opacity:0; transform:translateX(-60px); overflow:hidden;
+}
+.layer-card.visible{ opacity:1; transform:translateX(0); }
+.layer-card:hover{ background:linear-gradient(135deg,rgba(255,215,0,0.10) 0%,rgba(75,0,10,0.97) 100%); transform:translateX(8px) scale(1.008); box-shadow:-4px 0 0 var(–lc,#ffd700),0 0 50px rgba(255,215,0,0.10); z-index:10; }
+.layer-card::before{ content:’’; position:absolute; inset:0; background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.035) 50%,transparent 70%); transform:translateX(-100%); transition:transform 0.65s ease; }
+.layer-card:hover::before{ transform:translateX(100%); }
+.layer-card:not(:last-child)::after{ content:’’; position:absolute; left:40px; bottom:-18px; width:2px; height:18px; background:linear-gradient(to bottom,var(–lc,#ffd700),transparent); z-index:2; pointer-events:none; }
+
+.lc-icon{ width:64px; height:64px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; position:relative; flex-shrink:0; background:linear-gradient(145deg,rgba(255,215,0,0.15),rgba(45,0,5,0.95)); border:1px solid rgba(255,215,0,0.25); box-shadow:0 0 0 1px rgba(255,215,0,0.08),4px 4px 0 rgba(255,215,0,0.07),8px 8px 0 rgba(255,215,0,0.03); transition:all 0.4s ease; animation:iconFloat 4s ease-in-out infinite; }
+@keyframes iconFloat{ 0%,100%{transform:translateY(0) rotateX(0deg)} 50%{transform:translateY(-5px) rotateX(5deg)} }
+.lc-num{ position:absolute; top:-8px; right:-8px; width:21px; height:21px; border-radius:50%; background:var(–lc,#ffd700); color:#1a0003; font-family:‘Bebas Neue’,sans-serif; font-size:0.8rem; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 0 12px var(–lc,#ffd700); }
+
+.lc-body{ flex:1; min-width:0; }
+.lc-name{ font-family:‘Barlow Condensed’,sans-serif; font-size:1.25rem; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(–lc,#ffd700); margin-bottom:5px; }
+.lc-desc{ font-size:0.86rem; line-height:1.65; color:rgba(255,255,255,0.55); margin-bottom:10px; max-width:440px; }
+.lc-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+.lc-tag{ font-family:‘Barlow Condensed’,sans-serif; font-size:0.68rem; font-weight:700; letter-spacing:1.5px; padding:3px 10px; border-radius:2px; text-transform:uppercase; color:var(–lc,#ffd700); background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.25); transition:all 0.2s ease; }
+.lc-tag:hover{ background:rgba(255,215,0,0.16); }
+
+.lc-badges{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; flex-shrink:0; }
+.lc-badge{ font-family:‘Bebas Neue’,sans-serif; font-size:1rem; letter-spacing:2px; color:var(–lc,#ffd700); background:rgba(255,215,0,0.06); border:1px solid rgba(255,215,0,0.25); padding:4px 14px; border-radius:2px; white-space:nowrap; min-width:92px; text-align:center; transition:all 0.3s; }
+.layer-card:hover .lc-badge{ background:rgba(255,215,0,0.14); box-shadow:0 0 16px rgba(255,215,0,0.25); }
+
+/* STATS */
+.stats-bar{ position:relative; z-index:3; background:linear-gradient(135deg,rgba(255,215,0,0.07),rgba(200,0,20,0.08)); border-top:1px solid rgba(255,215,0,0.22); border-bottom:1px solid rgba(255,215,0,0.22); padding:52px 24px; overflow:hidden; }
+.stats-bar::before{ content:’’; position:absolute; inset:0; background:repeating-linear-gradient(90deg,transparent,transparent 49px,rgba(255,215,0,0.04) 49px,rgba(255,215,0,0.04) 50px); }
+.stats-inner{ max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:20px; position:relative; }
+.stat-item{ text-align:center; padding:22px; border:1px solid rgba(255,215,0,0.15); border-radius:4px; background:rgba(25,0,4,0.75); backdrop-filter:blur(10px); transition:all 0.35s ease; position:relative; overflow:hidden; }
+.stat-item:hover{ border-color:#ffd700; transform:translateY(-6px); box-shadow:0 20px 40px rgba(255,215,0,0.2); }
+.stat-item::before{ content:’’; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#ffd700,transparent); transform:scaleX(0); transition:transform 0.4s ease; }
+.stat-item:hover::before{ transform:scaleX(1); }
+.stat-val{ font-family:‘Bebas Neue’,sans-serif; font-size:3.2rem; line-height:1; background:linear-gradient(135deg,#ffffff,#ffe766,#ffd700); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; filter:drop-shadow(0 0 20px rgba(255,215,0,0.6)); }
+.stat-unit{ font-family:‘Bebas Neue’,sans-serif; font-size:1rem; color:#ffe766; letter-spacing:3px; }
+.stat-label{ font-family:‘Barlow Condensed’,sans-serif; font-size:0.7rem; font-weight:700; letter-spacing:3px; color:rgba(255,231,102,0.45); text-transform:uppercase; margin-top:8px; }
+
+/* FOOTER */
+.footer{ position:relative; z-index:3; text-align:center; padding:60px 24px; border-top:1px solid rgba(255,215,0,0.12); }
+.footer-logo{ font-family:‘Bebas Neue’,sans-serif; font-size:2.2rem; letter-spacing:10px; color:#ffd700; opacity:0.35; margin-bottom:12px; }
+.footer-copy{ font-size:0.72rem; letter-spacing:3px; color:rgba(255,231,102,0.25); text-transform:uppercase; }
+
+@keyframes heroReveal{ from{opacity:0;transform:scale(0.93) translateY(22px)} to{opacity:1;transform:scale(1) translateY(0)} }
+@keyframes fadeUp{ from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+
+@media(max-width:640px){
+.media-grid{grid-template-columns:1fr 1fr}
+.media-slot.video-slot{grid-column:1/-1}
+.layer-card{grid-template-columns:60px 1fr}
+.lc-badges{display:none}
+.stats-inner{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+
+</head>
+<body>
+
+<!-- Ces divs remplacent les pseudo-éléments pour forcer le fond rouge -->
+
+<div class="bg-layer"></div>
+<div class="grid-layer"></div>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- HERO -->
+
+<section class="hero">
+  <div class="hero-lines"><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="logo-lockup">
+    <div class="logo-pre">Protection Modulaire Avancée</div>
+    <div class="logo-main">HippoShield</div>
+    <div class="logo-sub">Système de Coque Intelligente — Génération IV</div>
+  </div>
+  <div class="ornament">
+    <div class="ornament-line"></div>
+    <div class="ornament-diamond"></div>
+    <div class="ornament-line r"></div>
+  </div>
+  <p class="hero-desc">
+    Conçu pour les environnements les plus hostiles, le HippoShield fusionne
+    <em>ingénierie de précision militaire</em> et technologie de pointe
+    en un système modulaire unique. Chaque couche est une forteresse.
+    Ensemble, elles sont <em>invincibles</em>.
+  </p>
+  <div class="hero-pills">
+    <span class="pill">IP68 Étanche</span>
+    <span class="pill">MIL-STD-810G</span>
+    <span class="pill">GPS Temps Réel</span>
+    <span class="pill">Biométrie</span>
+    <span class="pill">Résistant 200°C</span>
+    <span class="pill">HD 1080p</span>
+  </div>
+  <div class="scroll-hint"><span>Découvrir</span><div class="scroll-arrow"></div></div>
+</section>
+
+<!-- GALERIE -->
+
+<div class="section">
+  <div class="section-label">Galerie</div>
+  <h2 class="section-title">Visualisez la Bête</h2>
+
+<div class="media-grid">
+  <div class="media-slot" id="slot1">
+    <img src="assets/photo01.jpg" alt="Photo 01" class="slot-media" onerror="this.style.opacity='0'">
+    <div class="slot-icon">📸</div>
+    <div class="slot-label">Photo 01</div>
+  </div>
+
+  <div class="media-slot" id="slot2">
+    <img src="assets/photo02.jpg" alt="Photo 02" class="slot-media" onerror="this.style.opacity='0'">
+    <div class="slot-icon">📸</div>
+    <div class="slot-label">Photo 02</div>
+  </div>
+
+  <div class="media-slot" id="slot3">
+    <img src="assets/photo03.jpg" alt="Photo 03" class="slot-media" onerror="this.style.opacity='0'">
+    <div class="slot-icon">📸</div>
+    <div class="slot-label">Photo 03</div>
+  </div>
+
+  <div class="media-slot video-slot" id="slot4">
+    <video src="assets/demo.mp4" class="slot-media" controls muted onerror="this.style.opacity='0'"></video>
+    <div class="slot-icon">🎬</div>
+    <div class="slot-label">Vidéo de démonstration</div>
+  </div>
+</div>
+</div>
+
+<!-- COUCHES -->
+
+<section class="layers-section">
+  <div class="layers-inner">
+    <div class="section-label">Architecture</div>
+    <h2 class="section-title">7 Couches. Une Armure.</h2>
+    <p class="section-intro" style="margin-bottom:48px">Chaque composant est ingénieusement conçu pour s'assembler en une protection totale de 360°.</p>
+    <div class="exploded" id="exploded">
+      <div class="layer-card" style="--lc:#ffd700"><div class="lc-icon">🛡️<div class="lc-num">1</div></div><div class="lc-body"><div class="lc-name">Coque Extérieure Blindée</div><div class="lc-desc">Enveloppe rigide en alliage polymère renforcé, traitée contre les UV, l'humidité et les chocs thermiques extrêmes. Surface microstructurée anti-glisse.</div><div class="lc-tags"><span class="lc-tag">Étanche eau & poussière</span><span class="lc-tag">Chaleur 200°C</span><span class="lc-tag">Anti-UV</span></div></div><div class="lc-badges"><div class="lc-badge">IP68</div><div class="lc-badge">200°C</div></div></div>
+      <div class="layer-card" style="--lc:#ffe766"><div class="lc-icon">📷<div class="lc-num">2</div></div><div class="lc-body"><div class="lc-name">Module Caméra HD</div><div class="lc-desc">Optique haute définition avec flash LED de puissance variable. Joints pressurisés garantissant l'étanchéité totale même en immersion profonde.</div><div class="lc-tags"><span class="lc-tag">Caméra 1080p HD</span><span class="lc-tag">Flash LED ×2</span><span class="lc-tag">Joints durables</span></div></div><div class="lc-badges"><div class="lc-badge">1080p</div><div class="lc-badge">LED ×2</div></div></div>
+      <div class="layer-card" style="--lc:#ffcf00"><div class="lc-icon">🔐<div class="lc-num">3</div></div><div class="lc-body"><div class="lc-name">Module Verrou Biométrique</div><div class="lc-desc">Capteur d'empreintes digitales capacitif intégré au châssis. Déverrouillage en 0,3 seconde avec chiffrement AES-256. Impénétrable.</div><div class="lc-tags"><span class="lc-tag">Capteur d'empreintes</span><span class="lc-tag">AES-256</span><span class="lc-tag">0.3s unlock</span></div></div><div class="lc-badges"><div class="lc-badge">AES-256</div><div class="lc-badge">0.3s</div></div></div>
+      <div class="layer-card" style="--lc:#ffb800"><div class="lc-icon">🔊<div class="lc-num">4</div></div><div class="lc-body"><div class="lc-name">Unité Amplificateur Audio</div><div class="lc-desc">Amplificateur miniaturisé à faible distorsion avec chambre de résonance optimisée. Idéal pour environnements bruyants et communications critiques.</div><div class="lc-tags"><span class="lc-tag">Haut-parleur amplifié</span><span class="lc-tag">Boost +15 dB</span><span class="lc-tag">Faible distorsion</span></div></div><div class="lc-badges"><div class="lc-badge">+15 dB</div><div class="lc-badge">Stéréo</div></div></div>
+      <div class="layer-card" style="--lc:#ffa500"><div class="lc-icon">📡<div class="lc-num">5</div></div><div class="lc-body"><div class="lc-name">Module Traceur GPS</div><div class="lc-desc">Antenne GPS longue portée compatible GLONASS et Galileo. Localisation en temps réel avec précision métrique — idéal pour missions terrain.</div><div class="lc-tags"><span class="lc-tag">Temps réel</span><span class="lc-tag">GLONASS + Galileo</span><span class="lc-tag">±2m précision</span></div></div><div class="lc-badges"><div class="lc-badge">±2m</div><div class="lc-badge">Multi-sat</div></div></div>
+      <div class="layer-card" style="--lc:#ff8c00"><div class="lc-icon">📱<div class="lc-num">6</div></div><div class="lc-body"><div class="lc-name">Châssis Intérieur Anti-Choc</div><div class="lc-desc">Cadre en élastomère thermoplastique absorbant les impacts jusqu'à 2 mètres. Universel pour tous smartphones jusqu'à 6,7 pouces.</div><div class="lc-tags"><span class="lc-tag">Anti-chocs certifié</span><span class="lc-tag">Universel 6.7"</span><span class="lc-tag">Chute 2m</span></div></div><div class="lc-badges"><div class="lc-badge">MIL-810G</div><div class="lc-badge">2m drop</div></div></div>
+      <div class="layer-card" style="--lc:#e87000"><div class="lc-icon">🔩<div class="lc-num">7</div></div><div class="lc-body"><div class="lc-name">Système d'Étanchéité</div><div class="lc-desc">Joints toriques en silicone haute densité et vis en acier inoxydable SS316L. Chaque assemblage testé sous pression à 10 bars avant expédition.</div><div class="lc-tags"><span class="lc-tag">Joints silicone HD</span><span class="lc-tag">Acier SS316L</span><span class="lc-tag">10 bars testé</span></div></div><div class="lc-badges"><div class="lc-badge">10 bars</div><div class="lc-badge">SS316L</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item"><div class="stat-val">7</div><div class="stat-unit">Couches</div><div class="stat-label">Architecture Modulaire</div></div>
+    <div class="stat-item"><div class="stat-val">IP68</div><div class="stat-unit">Certifié</div><div class="stat-label">Étanchéité Totale</div></div>
+    <div class="stat-item"><div class="stat-val">200</div><div class="stat-unit">°C Max</div><div class="stat-label">Résistance Thermique</div></div>
+    <div class="stat-item"><div class="stat-val">360°</div><div class="stat-unit">&nbsp;</div><div class="stat-label">Protection Complète</div></div>
+  </div>
+</div>
+
+
+<footer class="footer">
+  <div class="footer-logo">— HippoShield —</div>
+  <div class="footer-copy">Protection Ultime · Technologie Avancée · Ingénierie de Précision</div>
+<div class="footer-copy" style="margin-top:10px; opacity:0.5;">YOMI Demele Jaurès · KOANDA Hassan · KONATE Mohamed · ITSOUHOU BIBENE Barack  </div>
+<div class="footer-copy" style="margin-top:6px; opacity:0.3;">© 2025 — ENSI Tanger | Pojet Français</div>
+
+</footer>
+
+<script>
+/* GOLD PARTICLES */
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+const GOLDS = ['#ffd700','#ffe766','#ffcf00','#ffb800','#ffa500','#fff3b0','#e6b800','#ffffff','#ffec80'];
+
+class P {
+  constructor(init){
+    this.x = Math.random()*W;
+    this.y = init ? Math.random()*H : H+10;
+    this.r = Math.random()*2.2+0.4;
+    this.vx = (Math.random()-0.5)*0.5;
+    this.vy = -(Math.random()*0.7+0.15);
+    this.a = Math.random()*0.75+0.2;
+    this.c = GOLDS[Math.floor(Math.random()*GOLDS.length)];
+    this.life = init ? Math.random()*300 : 0;
+    this.max = Math.random()*350+150;
+    this.flick = Math.random()<0.35;
+    this.fs = Math.random()*0.12+0.04;
+    this.fo = Math.random()*Math.PI*2;
+  }
+  update(){ this.x+=this.vx; this.y+=this.vy; this.life++; if(this.life>this.max||this.y<-10){this.x=Math.random()*W;this.y=H+10;this.life=0;this.max=Math.random()*350+150;} }
+  draw(){
+    let a = this.a*(1-this.life/this.max);
+    if(this.flick) a*=0.5+0.5*Math.sin(this.life*this.fs+this.fo);
+    ctx.save(); ctx.globalAlpha=a; ctx.fillStyle=this.c; ctx.shadowBlur=14; ctx.shadowColor=this.c;
+    ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill(); ctx.restore();
+  }
+}
+class Spark extends P {
+  constructor(){ super(true); this.r=Math.random()*3.5+1.5; }
+  draw(){
+    let a=this.a*(1-this.life/this.max)*(0.4+0.6*Math.sin(this.life*0.09));
+    ctx.save(); ctx.globalAlpha=a; ctx.strokeStyle=this.c; ctx.lineWidth=0.9; ctx.shadowBlur=18; ctx.shadowColor=this.c;
+    ctx.beginPath(); ctx.moveTo(this.x-this.r*2.2,this.y); ctx.lineTo(this.x+this.r*2.2,this.y);
+    ctx.moveTo(this.x,this.y-this.r*2.2); ctx.lineTo(this.x,this.y+this.r*2.2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(this.x,this.y,this.r*0.4,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.shadowBlur=8; ctx.fill(); ctx.restore();
+  }
+}
+for(let i=0;i<190;i++) particles.push(new P(true));
+for(let i=0;i<45;i++) particles.push(new Spark());
+
+function animate(){
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<particles.length;i++) for(let j=i+1;j<particles.length;j++){
+    const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y, d=Math.sqrt(dx*dx+dy*dy);
+    if(d<80){ ctx.save(); ctx.globalAlpha=(1-d/80)*0.09; ctx.strokeStyle='#ffd700'; ctx.lineWidth=0.5; ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.stroke(); ctx.restore(); }
+  }
+  particles.forEach(p=>{ p.update(); p.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* CURSOR */
+const cur=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function uc(){ cur.style.left=mx+'px'; cur.style.top=my+'px'; rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(uc); })();
+document.addEventListener('mousedown',()=>{cur.style.transform='translate(-50%,-50%) scale(1.9)';ring.style.transform='translate(-50%,-50%) scale(0.65)';});
+document.addEventListener('mouseup',()=>{cur.style.transform='translate(-50%,-50%) scale(1)';ring.style.transform='translate(-50%,-50%) scale(1)';});
+
+/* SCROLL REVEAL */
+const io=new IntersectionObserver(entries=>{ entries.forEach((e,i)=>{ if(e.isIntersecting) setTimeout(()=>e.target.classList.add('visible'),i*90); }); },{threshold:0.08});
+document.querySelectorAll('.layer-card').forEach(c=>io.observe(c));
+
+/* MEDIA */
+function loadMedia(input,type,slotId){
+  const file=input.files[0]; if(!file) return;
+  const url=URL.createObjectURL(file);
+  const slot=document.getElementById(slotId);
+  slot.querySelectorAll('img,video').forEach(el=>el.remove());
+  const el=document.createElement(type); el.src=url;
+  if(type==='video'){el.autoplay=true;el.loop=true;el.muted=true;el.controls=true;}
+  el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;border-radius:4px;';
+  slot.appendChild(el);
+  slot.querySelector('.slot-icon').style.display='none';
+  slot.querySelector('.slot-label').style.display='none';
+}
+
+/* PARALLAX */
+window.addEventListener('scroll',()=>{
+  const y=window.scrollY, logo=document.querySelector('.logo-main');
+  if(logo){ logo.style.transform=`translateY(${y*0.28}px)`; logo.style.opacity=Math.max(0,1-y/380); }
+});
+document.querySelectorAll('.lc-icon').forEach((el,i)=>{ el.style.animationDelay=(i*0.55)+'s'; });
+</script>
+
+</body>
+</html>
